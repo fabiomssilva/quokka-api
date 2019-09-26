@@ -1,16 +1,17 @@
 {
   "name": "quokka-api",
   "version": "0.0.1",
-  "description": "API ORM That integrates with Express.",
+  "description": "API ORM That integrates with Express. For happy developers.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Allways good\" && exit 0"
+    "test": "echo \"Always good\" && exit 0"
   },
   "keywords": [
     "api",
     "orm",
     "database"
   ],
+  "repository": "github:fabiomssilva/quokka-api",
   "author": "Fabio Silva",
   "license": "MIT"
 }
