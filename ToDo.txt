@@ -3,5 +3,5 @@ Add upsert option
 make error handling here after figure out what to do
 Make sure that bodyparser json is loaded fail if not
 Add pre error hook
-Add repository on package.json
 remove/add backslash if needed.
+afterError hook
