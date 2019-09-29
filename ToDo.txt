@@ -5,3 +5,4 @@ Make sure that bodyparser json is loaded fail if not
 Add pre error hook
 remove/add backslash if needed.
 afterError hook
+where to hook logging ?

@@ -1,6 +1,7 @@
 const { Sequelize, Model, DataTypes } = require('sequelize');
-const { error } = require('./error');
-const bodyParser = require('body-parser')
+const { error500 } = require('./error');
+const bodyParser = require('body-parser');
+const { pathFromConfigAndModel } = require('./lib/functions');
 
 
 module.exports = class QuokkaApi {
@@ -11,8 +12,7 @@ module.exports = class QuokkaApi {
     // ToDo Give option for this
     model.sync();
     // ToDo Give option for this // model.sync( { force: true })
-    const path = `${config.apiPrefix ? config.apiPrefix : ''}/${config.apiEntityRewrite ? config.apiEntityRewrite : model.name}`;
-
+    const path = pathFromConfigAndModel(config)
     const expose = config.expose ? config.expose : ['put/id', 'post', 'get', 'delete/id', 'get/id'];
 
     const entryHook = async (req,res) => {
@@ -32,12 +32,12 @@ module.exports = class QuokkaApi {
       this.app.get(path, async (req, res) => {
         try {
           entryHook(req,res);
-          const values = await model.findAll(JSON.parse(req.query.q)); // Todo Sanitize this input
+          const values = await model.findAll(JSON.parse(req.query.q ? req.query.q : "{}")); // Todo Sanitize this input
           preResponseHook(req,res);
           return res.send({ data: values });
         }
         catch (err) {
-          error(err, req, res);
+          error500(err, req, res);
         }
       });
     }
@@ -48,11 +48,14 @@ module.exports = class QuokkaApi {
         try {
           entryHook(req,res);
           const value = await model.findByPk(req.params.id);
+          if (value === null) {
+            return error404(err, req, res);
+          }
           preResponseHook(req,res);
           return res.send(value)
         }
         catch (err) {
-          error(err, req, res);
+          error500(err, req, res);
         }
       });
     }
@@ -67,7 +70,7 @@ module.exports = class QuokkaApi {
           return res.send(result);
         }
         catch (err) {
-          error(err, req, res);
+          error500(err, req, res);
         }
       });
     }
@@ -86,7 +89,7 @@ module.exports = class QuokkaApi {
           return res.send(result);
         }
         catch (err) {
-          error(err, req, res);
+          error500(err, req, res);
         }
       });
     }
@@ -105,21 +108,26 @@ module.exports = class QuokkaApi {
           return res.send(result)
         }
         catch (err) {
-          error(err, req, res);
+          error500(err, req, res);
         }
       });
     }
   }
 
-  constructor(config) {
-    if (!(config.db.database, config.db.username, config.db.password, config.db.host, config.db.dialect)) {
-      throw ('missing configuration parameters. Make sure "config.database, config.username, config.password, config.host, config.dialect" exist');
-    } //TODO make error handling here after figure out what to do
-
+  constructor() {
     this.models = {};
     this.Sequelize = Sequelize;
     this.Model = Model;
     this.DataTypes = DataTypes;
+    this.app = null;
+  }
+
+
+  async init(config) {
+    if (!(config.db.database, config.db.username, config.db.password, config.db.host, config.db.dialect)) {
+      throw ('missing configuration parameters. Make sure "config.database, config.username, config.password, config.host, config.dialect" exist');
+    } //TODO make error handling here after figure out what to do
+
     this.app = config.app;
     this.app.use(bodyParser.json());
 
@@ -128,19 +136,16 @@ module.exports = class QuokkaApi {
       dialect: config.db.dialect, /* one of 'mysql' | 'mariadb' | 'postgres' | 'mssql' */
       pool: config.pool,
       define: {
-        timestamps: false
+        timestamps: true
       }
     });
-
     // Test if connection works
-    this.sequelize
-      .authenticate()
-      .then(() => {
-        console.log('Connection has been established successfully.');
-      })
-      .catch(err => {
-        console.error('Unable to connect to the database:', err);
-        throw (err);
-      });
+    try {
+      await this.sequelize.authenticate();
+      console.log('Connection has been established successfully.');
+    }
+    catch(err) {
+      error500(err, req, res);
+    }
   }
 }

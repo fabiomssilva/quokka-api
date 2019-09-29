@@ -1,15 +1,16 @@
-module.exports.error = (err,req, res) => {
-    console.log(err);
-    res.status(500);
-    res.send( {error: err.message} )
+module.exports.error = (err, req, res, statusCode, message) => {
+    res.status(statusCode);
+    return res.send( {
+        error: message,
+        statusCode: statusCode,
+        message: err,
+    })
+}
+
+module.exports.error500 = (err,req, res) => {
+    return exports.error(err,req,res,500,'Internal Server Error');
 };
 
 module.exports.error404 = (err,req, res) => {
-    console.log(err);
-    res.status(404);
-    res.send( {
-        error: 'not found',
-        statusCode: 404,
-        message: err,
-    } )
+    return exports.error(err,req,res,404,'Not Found');
 };

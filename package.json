@@ -4,7 +4,7 @@
   "description": "API ORM That integrates with Express. For happy developers.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Always good\" && exit 0"
+    "test": "jest"
   },
   "keywords": [
     "api",
@@ -13,11 +13,17 @@
   ],
   "dependencies": {
     "body-parser": "^1.19.0",
+    "jest": "^24.9.0",
     "mysql2": "^1.7.0",
     "pg": "^7.12.1",
     "sequelize": "^5.19.0"
   },
   "repository": "github:fabiomssilva/quokka-api",
   "author": "Fabio Silva",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "express": "^4.17.1",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.7"
+  }
 }
