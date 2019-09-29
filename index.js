@@ -112,13 +112,16 @@ module.exports = class QuokkaApi {
       throw ('missing configuration parameters. Make sure "config.database, config.username, config.password, config.host, config.dialect" exist');
     } //TODO make error handling here after figure out what to do
 
+    let pool = config.pool ? config.pool : { max: 5, min: 0, acquire: 30000, idle: 10000};
+    let host = config.db.host ? config.db.host : 'localhost'
+
     this.app = config.app;
     this.app.use(bodyParser.json());
 
     this.sequelize = new Sequelize(config.db.database, config.db.username, config.db.password, {
       host: config.db.host,
       dialect: config.db.dialect, /* one of 'mysql' | 'mariadb' | 'postgres' | 'mssql' */
-      pool: config.pool,
+      pool,
       define: {
         timestamps: true
       }

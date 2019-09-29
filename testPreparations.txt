@@ -15,3 +15,6 @@ docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -d --networ
 
 #start phpMyAdmin container
 docker run --name myadmin -d -e PMA_HOST=mysql -p 8080:80 --network=pg phpmyadmin/phpmyadmin
+
+psql -U postgres -W
+docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=password --network=pg --name postgres postgres:11

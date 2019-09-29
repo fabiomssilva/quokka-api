@@ -17,12 +17,12 @@ beforeAll(async () => {
         {
             app,
             db: {
-                database: 'helloworld',
-                password: 'password',
-                username: 'postgres',
-                dialect: 'postgres',
-                host: 'localhost', // Todo set default to localhost
-                pool: { // Todo Set default for this.
+                database: 'helloworld', // required
+                password: 'password', // required
+                username: 'postgres', // required
+                dialect: 'postgres', // required
+                host: 'localhost', // optional: defaults to localhost
+                pool: { // optional: use this defaults
                     max: 5,
                     min: 0,
                     acquire: 30000,
