@@ -8,104 +8,88 @@ module.exports = class QuokkaApi {
 
   add(config) {
     const model = config.model;
+    const allowedMethods = ['put/id', 'post', 'get', 'delete/id', 'get/id'];
 
     // ToDo Give option for this
     model.sync();
     // ToDo Give option for this // model.sync( { force: true })
     const path = pathFromConfigAndModel(config)
-    const expose = config.expose ? config.expose : ['put/id', 'post', 'get', 'delete/id', 'get/id'];
+    const expose = config.expose ? config.expose : allowedMethods;
 
-    const entryHook = async (req,res) => {
+    expose.filter( (e) => {
+      console.log('filter',e)
+      if (allowedMethods.indexOf(e) < 0) {
+        throw (`${e} is not allowed as a method`);
+      }
+    });
+
+    const entryHook = async (req, res) => {
       if (config.entryHook) {
         config.entryHook(req, res);
       }
     };
 
-    const preResponseHook = async(req,res) => {
+    const preResponseHook = async (req, res) => {
       if (config.preResponseHook) {
-        config.preResponseHook(req,res);
+        config.preResponseHook(req, res);
       }
-    }    
-
-    if (expose.indexOf('get') >= 0) {
-      console.log(`Adding get ${path}`)
-      this.app.get(path, async (req, res) => {
-        try {
-          entryHook(req,res);
-          const values = await model.findAll(JSON.parse(req.query.q ? req.query.q : "{}")); // Todo Sanitize this input
-          preResponseHook(req,res);
-          return res.send({ data: values });
-        }
-        catch (err) {
-          error500(err, req, res);
-        }
-      });
     }
 
-    if (expose.indexOf('get/id') >= 0) {
-      console.log(`Adding get/id ${path}/:id`)
-      this.app.get(`${path}/:id`, async (req, res) => {
+
+    for (const m of expose) {
+      let method = null;
+
+      method = m.split('/')[0] // This is only possible because expose is validated and only know values are in!
+      if (method === null) throw ('Not a valid method');
+
+
+      console.log(`Adding ${m} ${path}`)
+      this.app[method](path, async (req, res) => {
         try {
-          entryHook(req,res);
-          const value = await model.findByPk(req.params.id);
-          if (value === null) {
-            return error404(err, req, res);
+          entryHook(req, res);
+
+          let values;
+          //get
+          if (m === 'get') {
+            values = await model.findAll(JSON.parse(req.query.q ? req.query.q : "{}")); // Todo Sanitize this input
           }
-          preResponseHook(req,res);
-          return res.send(value)
-        }
-        catch (err) {
-          error500(err, req, res);
-        }
-      });
-    }
 
-    if (expose.indexOf('post') >= 0) {
-      console.log(`Adding post ${path}`)
-      this.app.post(path, async (req, res) => {
-        try {
-          entryHook(req,res);
-          const result = await model.create(req.body);
-          preResponseHook(req,res);
-          return res.send(result);
-        }
-        catch (err) {
-          error500(err, req, res);
-        }
-      });
-    }
-
-    if (expose.indexOf('put/id') >= 0) {
-      console.log(`Adding put/id ${path}/:id`)
-      this.app.put(`${path}/:id`, async (req, res) => { //ToDo: Add upsert option.
-        try {
-          entryHook(req,res);
-          const obj = await model.findByPk(req.params.id)
-          if (obj === null) {
-            return error404(err, req, res);
+          //get/id
+          if (m === 'get/id') {
+            values = await model.findByPk(req.params.id);
+            if (values === null) {
+              return error404(err, req, res);
+            }
           }
-          const result = obj.update(req.body);
-          preResponseHook(req,res);
-          return res.send(result);
-        }
-        catch (err) {
-          error500(err, req, res);
-        }
-      });
-    }
-
-    if (expose.indexOf('delete/id') >= 0) {
-      console.log(`Adding delete/id ${path}/:id`)
-      this.app.delete(`${path}/:id`, async (req, res) => {
-        try {
-          entryHook(req,res);
-          const obj = await model.findByPk(req.params.id)
-          if (obj === null) {
-            return error404(err, req, res);
+          //post
+          if (m === 'post') {
+            values = await model.create(req.body);
           }
-          const result = await obj.destroy();
-          preResponseHook(req,res);
-          return res.send(result)
+
+          //put/id
+          if (m === 'put/id') {
+            const obj = await model.findByPk(req.params.id)
+            if (obj === null) {
+              return error404(err, req, res);
+            }
+            values = obj.update(req.body);
+          }
+
+          //delete/id
+          if (m === 'delete/id') {
+            const obj = await model.findByPk(req.params.id)
+            if (obj === null) {
+              return error404(err, req, res);
+            }
+            const values = await obj.destroy();
+          }
+
+          preResponseHook(req, res, m, path);
+
+          if (m === 'get') return res.send({ data: values });
+          if ((m === 'get/id') || (m === 'post') || (m === 'put/id') || (m === 'delete/id')) return res.send(values)
+          error500("We are never suppoed to get here !", req, res);
+
         }
         catch (err) {
           error500(err, req, res);
@@ -144,7 +128,7 @@ module.exports = class QuokkaApi {
       await this.sequelize.authenticate();
       console.log('Connection has been established successfully.');
     }
-    catch(err) {
+    catch (err) {
       error500(err, req, res);
     }
   }
