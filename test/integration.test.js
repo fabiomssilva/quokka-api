@@ -65,7 +65,8 @@ beforeAll(async () => {
         return res.status(403).json({ error: '' });
     }
 
-    const preResponseHook = async (req, res) => {
+    const preResponseHook = async (req, res, type, path) => {
+        // Log: Replied with status code xxx to request...
         res.set({
             'X-Header1': 'header-one',
             'X-Header2': '123',

@@ -2,7 +2,5 @@ SQL Raw support on a secure way by whitelisting queries
 Add upsert option
 make error handling here after figure out what to do
 Make sure that bodyparser json is loaded fail if not
-Add pre error hook
-remove/add backslash if needed.
-afterError hook
-where to hook logging ?
+Add pre error hook -> Logging can go here
+Add afterError hook -> Logging can go here

@@ -1,6 +1,6 @@
 {
   "name": "quokka-api",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "API ORM That integrates with Express. For happy developers.",
   "main": "index.js",
   "scripts": {
